@@ -1,0 +1,13 @@
+stages:
+	- test
+	- build
+
+image : daewok/lisp-devel
+
+before_script:
+        - ln -s "${CI_PROJECT_DIR}" ~/quicklisp/local-projects/method-hooks
+
+test:
+	stage: test
+	script:
+		- sbcl --load ci-test.lisp --disable-debugger --quit
