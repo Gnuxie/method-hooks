@@ -43,6 +43,12 @@
             (,type-list-sym (mapcar #'second ,descriptive-lambda-list-sym)))
        ,@body)))
 
+(defmacro %load-specializers-to-table (generic-function type-list qualifier)
+  (let ((hooks (gensym)))
+    `(let ((,hooks ',(%produce-specific-hooks type-list generic-function qualifier)))
+       (mapc (lambda (f) (%intern-hook ',generic-function f ',type-list ',qualifier))
+             ,hooks))))
+
 (defmacro defhook (generic-function hook-name lambda-list (&optional (qualifier :unqualified)) &body body)
   "define a hook to be to be called by the effective method.
 
@@ -52,6 +58,7 @@ the type specializer list for the given generic-function."
     (%intern-hook generic-function hook-name type-list qualifier)
 
     `(progn
+       (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
        (define-hook-function ,hook-name ,vanilla-lambda-list ,qualifier
                              ,@body)
 

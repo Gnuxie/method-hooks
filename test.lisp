@@ -1,20 +1,12 @@
-(defpackage #:method-hooks-package-test
-  (:use #:cl #:method-hooks)
-  (:export
-   #:reset-tables))
-
 (in-package :method-hooks-package-test)
 
 (defun reset-tables ()
   (clear-hook-table))
 
-(defpackage #:method-hooks-test
-  (:use #:cl #:method-hooks #:parachute)
-  (:export
-   #:run
-   #:ci-run))
-
 (in-package :method-hooks-test)
+
+(define-test method-hooks-test)
+
 (clear-hook-table)
 
 (defvar *result* 1)
@@ -42,8 +34,9 @@
 (defhook qualifier-test before-qualified ((a integer)) (:before)
     (setf *qualifier-before-test* t))
 
-(define-test method-hooks-test
-
+(define-test comprehensive-test
+  :parent method-hooks-test
+  
   (setf *qualifier-before-test* nil)
   (setf *qualifier-test-pass* nil)
 
@@ -66,26 +59,20 @@
 
   (define-test redifinition-test
     :depends-on (serial-test) ; "depends on", really we need to ensure this happens afterwards.
-    (setf *result* 0)
 
-    (setf (symbol-function 'add-twice)
-          (lambda (x) (incf *result* (* 2 x)))
-          (symbol-function 'add-thrice)
-          (lambda (x) (incf *result* (* 3 x))))
+    (with-fixtures '(add-twice add-thrice)
+      (setf *result* 0)
 
-    (accumulating 2)
-    (is = 12 *result*))
+      (setf (symbol-function 'add-twice)
+            (lambda (x) (incf *result* (* 2 x)))
+            (symbol-function 'add-thrice)
+            (lambda (x) (incf *result* (* 3 x))))
+
+      (accumulating 2)
+      (is = 12 *result*)))
 
   (define-test qualified-method-test
     :depends-on (spooky-package-test)
     
     (qualifier-test 3)
     (true *qualifier-test-pass*)))
-
-(defun run (&key (report 'plain))
-  (test 'method-hooks-test :report report))
-
-(defun ci-run ()
-  (let ((test-result (run)))
-    (when (not (null (results-with-status :failed test-result)))
-      (uiop:quit -1))))
