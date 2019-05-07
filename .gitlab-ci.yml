@@ -5,7 +5,11 @@ stages:
 image : daewok/lisp-devel
 
 before_script:
+    - apt-get update -qy
+    - apt-get install git-core
+    - git clone https://github.com/Shinmera/parachute.git ~/quicklisp/local-projects/parachute
     - ln -s "${CI_PROJECT_DIR}" ~/quicklisp/local-projects/method-hooks
+    
 
 test:
     stage: test
