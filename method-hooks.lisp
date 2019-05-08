@@ -31,22 +31,27 @@ qualifier."
   `(defun ,hook-name 
        ,vanilla-lambda-list
      ,@body))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun get-default-qualifier (gf-name)
     "fetch the default qualifier for the generic function."
-    (gethash gf-name *hf-default-qualifiers*)))
+    (gethash gf-name *hf-default-qualifiers*))
+
+  (defun effective-qualifier (gf-name qualifier)
+    (let ((combination-type (get-default-qualifier gf-name)))
+      (cond ((and (null combination-type) (eql qualifier :use-default))
+             :unqualified)
+            ((eql qualifier :use-default) combination-type)
+            (t qualifier)))))
 
 (defmacro with-effective-qualifier (gf-name qualifier &body body)
   "take generic function and a symbol bound to a qualifier and mask that symbol with the effective qualifier.
 
 The effective qualifier is the default qualifier for the given generic function should there be one defined by
 a define-hook-function form."
-  (let ((combination-type (get-default-qualifier gf-name)))
-    `(let ((,qualifier
-            ,(cond ((null combination-type) qualifier)             ; gf has no combination type, so unqualified is valid.
-                   ((eql qualifier :unqualified) combination-type) ; gf has combination-type, use default from table
-                   (t qualifier))))
-       ,@body)))
+  `(let ((,qualifier
+          (effective-qualifier ,gf-name ,qualifier)))
+     ,@body))
 
 (defmacro %define-method-dispatch (generic-function qualifier descriptive-lambda-list vanilla-lambda-list type-list &body body)
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
@@ -80,7 +85,7 @@ from the compilation environment into the internal table inside the runtime envi
        (mapc (lambda (f) (%intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 
-(defmacro defhook (generic-function hook-name lambda-list (&optional (qualifier :unqualified)) &body body)
+(defmacro defhook (generic-function hook-name lambda-list (&optional (qualifier :use-default)) &body body)
   "define a hook to be to be called by the effective method.
 
 creates a function `hook-name` with the `body` then creates a method to dispatch all hooks matching
@@ -88,39 +93,46 @@ the type specializer list for the given generic-function."
   (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
     (with-effective-qualifier generic-function qualifier
       (%intern-hook generic-function hook-name type-list qualifier)
-
+      (print qualifier)
         `(progn
            (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
                          ,@body)
            (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list)))))
 
-(defmacro define-hook-function (name gf-lambda-list &args options)
+(defmacro intern-gf-combination (gf-name combination-type)
+  `(setf (gethash ,gf-name *hf-default-qualifiers*)         
+         ,combination-type))
+
+(defmacro define-hook-function (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
 
 by default the combination type becomes the default qualifier for new hooks
 this can be overriden by not using this and using defgeneric. 
 I might add a way to override it from here too."
-  (macrolet ((%intern-gf-combination (gf-name combination-type)
-               `(setf (gethash ,gf-name *hf-default-qualifiers*)
-                      (if (null combination-type) 'progn combination-type))))
-    (let ((combination-type (cdr (find :method-combination options :key #'car :test #'eql))))
-      (%intern-gf-combination name combination-type)
-      `(progn (%intern-gf-combination ,name ,combination-type)
-              (defgeneric ,name ,gf-lambda-list
-                ,(concatenate
-                  'list
-                  (delete :method-combination options :key #'car :test #:eql)
-                  '((:method-combination
-                     (if (null combination-type) 'progn combination-type)))))))))
+  (let* ((combination-option (find :method-combination options :key #'car :test #'eql))
+         (combination-type
+          (cond ((null combination-option) 'progn)
+                ((null (cadr combination-option)) :unqualified)
+                (t (cadr combination-option)))))
+  
+    (intern-gf-combination name combination-type)
+    `(progn (intern-gf-combination ',name ',combination-type)
+            (defgeneric ,name ,gf-lambda-list
+              ,(concatenate
+                'list
+                (delete :method-combination options :key #'car :test #'eql)
+                `(:method-combination
+                  ,combination-type))))))
 
-(defmacro finalize-dispatch-method (generic-function lambda-list (&optional (qualifier :unqualified)) &body body)
+(defmacro finalize-dispatch-method (generic-function lambda-list (&optional (qualifier :use-default)) &body body)
   "add a body to the method which dispatched the hooks for the given type specializer list
 useful if you wanted to use call-next-method
 defining another hook for the same gf and type specializer list after use will require recompilation
 of the form. "
-   (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
-     `(%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list
-                               ,body)))
+  (with-effective-qualifier generic-function qualifier
+    (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
+      `(%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list
+         ,body))))
 
 (defun clear-hook-table ()
   "will not require recompilation of all the forms unless an existing hook definition is redefined

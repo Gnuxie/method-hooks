@@ -3,7 +3,8 @@
   (:export
    #:defhook
    #:clear-hook-table
-   #:finalize-dispatch-method)
+   #:finalize-dispatch-method
+   #:define-hook-function)
   )
 
 
