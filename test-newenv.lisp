@@ -10,7 +10,7 @@
 ;;; replenished on load. if it hasn't, the method dispatcher that is defined here will only dispatch
 ;;; `add-thrice` and not any of the other hooks defined in the other file.
 (in-package :method-hooks-test)
-(method-hooks:defhook accumulating add-thrice ((x integer)) (progn)
+(method-hooks:defhook accumulating add-thrice progn ((x integer))
   (incf *result* x))
 
 (let ((result (parachute:test 'method-hooks-test::comprehensive-test)))

@@ -14,23 +14,23 @@
 (defgeneric accumulating (a)
   (:method-combination progn))
 
-(method-hooks:defhook accumulating add-once ((x integer)) (progn)
+(method-hooks:defhook accumulating add-once progn ((x integer))
   (incf *result* x))
 
-(defhook accumulating add-twice ((x integer)) (progn)
+(defhook accumulating add-twice progn ((x integer))
   (incf *result* x))
 
-(defhook accumulating add-thrice ((x integer)) (progn)
+(defhook accumulating add-thrice progn ((x integer)) 
   (incf *result* x))
 
 (defvar *qualifier-before-test* nil)
 (defvar *qualifier-test-pass* nil)
 ;;; these two are required by spooky-package-test and qualified-method-test
 (defgeneric qualifier-test (a))
-(defhook qualifier-test not-qualified ((a integer)) ()
+(defhook qualifier-test not-qualified ((a integer))
   (when *qualifier-before-test*
     (setf *qualifier-test-pass* t)))
-(defhook qualifier-test before-qualified ((a integer)) (:before)
+(defhook qualifier-test before-qualified :before ((a integer))
   (setf *qualifier-before-test* t))
 
 (define-test comprehensive-test
@@ -83,10 +83,10 @@
     (let ((sum 0))
       (define-hook-function progntest (a))
 
-      (defhook progntest prognonce ((a integer)) ()
+      (defhook progntest prognonce ((a integer))
         (incf sum))
 
-      (defhook progntest progntwice ((a integer)) ()
+      (defhook progntest progntwice ((a integer))
         (incf sum))
       
       (define-test check-effective-qualifier

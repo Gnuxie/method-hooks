@@ -85,19 +85,29 @@ from the compilation environment into the internal table inside the runtime envi
        (mapc (lambda (f) (%intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 
-(defmacro defhook (generic-function hook-name lambda-list (&optional (qualifier :use-default)) &body body)
+(defmacro %destructure-defhook-args (args &body body)
+  (let ((args-sym (gensym)))
+    `(let* ((,args-sym ,args)
+            (qualifier
+            (cond ((and (symbolp (car ,args-sym)) (not (null (car ,args-sym))))
+                   (prog1 (car ,args-sym) (setf ,args-sym (cdr ,args-sym))))
+                  (t :use-default))))
+       (destructuring-bind (lambda-list &body body) ,args-sym
+         ,@body))))
+
+(defmacro defhook (generic-function hook-name &rest args); {qualifier} lambda-list &body body
   "define a hook to be to be called by the effective method.
 
 creates a function `hook-name` with the `body` then creates a method to dispatch all hooks matching
 the type specializer list for the given generic-function."
-  (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
-    (with-effective-qualifier generic-function qualifier
-      (%intern-hook generic-function hook-name type-list qualifier)
-      (print qualifier)
+  (%destructure-defhook-args args
+    (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
+      (with-effective-qualifier generic-function qualifier
+        (%intern-hook generic-function hook-name type-list qualifier)
         `(progn
            (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
                          ,@body)
-           (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list)))))
+           (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list))))))
 
 (defmacro intern-gf-combination (gf-name combination-type)
   `(setf (gethash ,gf-name *hf-default-qualifiers*)         
