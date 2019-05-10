@@ -75,7 +75,18 @@
 
     (with-fixtures '(*qualifier-test-pass*)
       (qualifier-test 3)
-      (true *qualifier-test-pass*)))
+      (true *qualifier-test-pass*))
+
+    (let ((count 0))
+      (with-fixtures '(count)
+        (defhook change-the-qualifier changing-this ()
+                 (incf count))
+
+        (defhook change-the-qualifier changing-this :before ()
+                 (incf count))
+
+        (change-the-qualifier)
+        (is = 1 count))))
 
   (define-test qualified-hook-function
     :depends-on (qualified-method-test)
@@ -101,10 +112,10 @@
     (define-hook-function addtest (x)
       (:method-combination +))
 
-    (defhook addtest addonce ((x integer)) ()
+    (defhook addtest addonce ((x integer))
       x)
 
-    (defhook addtest addtwice ((x integer)) ()
+    (defhook addtest addtwice ((x integer))
       x)
 
     (skip "this is going to take some implementing to do, bc atm we only disdpatch hooks with mapc"

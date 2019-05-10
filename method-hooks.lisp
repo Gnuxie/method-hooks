@@ -25,7 +25,7 @@ a define-hook-function form."
             ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
                                  (mapc (lambda (f) (funcall f . ,vanilla-lambda-list))
-                                       ',(%produce-specific-hooks type-list generic-function  qualifier))
+                                       (mapcar #'name (%specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
 
                                  ,@body)
                                              :end (if (eql :unqualified qualifier) 3 0)))))
@@ -46,8 +46,8 @@ a define-hook-function form."
   "creates a form to load the hooks specific to the gf/type-specializer-list/qualifier
 from the compilation environment into the internal table inside the runtime environment."
   (let ((hooks (gensym)))
-    `(let ((,hooks ',(%produce-specific-hooks type-list generic-function qualifier)))
-       (mapc (lambda (f) (%intern-hook ',generic-function f ',type-list ',qualifier))
+    `(let ((,hooks ',(mapcar #'name (%specific-hooks-for-generic type-list generic-function qualifier))))
+       (mapc (lambda (f) (intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 
 (defmacro %destructure-defhook-args (args &body body)
@@ -68,15 +68,11 @@ the type specializer list for the given generic-function."
   (%destructure-defhook-args args
     (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
       (with-effective-qualifier generic-function qualifier
-        (%intern-hook generic-function hook-name type-list qualifier)
+        (intern-hook generic-function hook-name type-list qualifier)
         `(progn
            (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
                          ,@body)
            (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list))))))
-
-(defmacro intern-gf-combination (gf-name combination-type)
-  `(setf (gethash ,gf-name *hf-default-qualifiers*)         
-         ,combination-type))
 
 (defmacro define-hook-function (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
@@ -90,8 +86,8 @@ I might add a way to override it from here too."
                 ((null (cadr combination-option)) :unqualified)
                 (t (cadr combination-option)))))
   
-    (intern-gf-combination name combination-type)
-    `(progn (intern-gf-combination ',name ',combination-type)
+    (intern-hook-function name combination-type combination-type)
+    `(progn (intern-hook-function ',name ',combination-type ',combination-type)
             (defgeneric ,name ,gf-lambda-list
               ,(concatenate
                 'list
