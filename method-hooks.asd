@@ -4,9 +4,10 @@
   :maintainer "Gnuxie <Gnuxie@protonmail.com>"
   :licence "Mozilla Public License Version 2.0"
   :serial t
-  :components ((:file "package")
-               (:file "combination-management")
-               (:file "known-dispatchers")
-               (:file "hook-management")
-               (:file "method-hooks"))
+  :components  ((:module "src" :components
+                         ((:file "package")
+                          (:file "combination-management")
+                          (:file "known-dispatchers")
+                          (:file "hook-management")
+                          (:file "method-hooks"))))
   :description "simple method hooks defined like methods and dispatched via method")
