@@ -22,10 +22,13 @@ a define-hook-function form."
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
   (with-effective-qualifier generic-function qualifier
     `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
+            (%load-dispatchers)
             ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
-                                 (mapc (lambda (f) (funcall f . ,vanilla-lambda-list))
-                                       (mapcar #'name (%specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
+                                 (funcall ,(dispatch-for-qualifier qualifier)
+                                          (list ,@vanilla-lambda-list)
+                                  (mapcar #'name
+                                           (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
 
                                  ,@body)
                                              :end (if (eql :unqualified qualifier) 3 0)))))
@@ -46,7 +49,7 @@ a define-hook-function form."
   "creates a form to load the hooks specific to the gf/type-specializer-list/qualifier
 from the compilation environment into the internal table inside the runtime environment."
   (let ((hooks (gensym)))
-    `(let ((,hooks ',(mapcar #'name (%specific-hooks-for-generic type-list generic-function qualifier))))
+    `(let ((,hooks ',(mapcar #'name (specific-hooks-for-generic type-list generic-function qualifier))))
        (mapc (lambda (f) (intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 

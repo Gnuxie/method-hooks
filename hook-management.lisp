@@ -54,7 +54,10 @@ then we must intern it in an appropriate way."
 
 (defun intern-hook (gf-name hook-name type-list qualifier)
   "intern the hook into the hooks hashtable by symbol name and into the generic functions table
-by type-list and qualifier"
+by type-list and qualifier
+
+as we are keeping references to hook objects in two places and due to the dificulty of keeping both
+exactly up to date, specific-hooks-for-generic  will remove old references from the hook functions method list before returning the result."
   (when (null (gethash gf-name *hook-functions*))
     (intern-undeclared-hook-function gf-name))
 
@@ -78,14 +81,12 @@ by type-list and qualifier"
         (setf (gethash hook-name *hooks*)
               existing-hook)))))
 
-(defun %specific-hooks-for-generic (type-list generic-function qualifier)
-  "as we are keeping references to hook objects in two places and due to the dificulty of keeping both
-exactly up to date, this function will remove old references from the list before returning the result."
+(defun specific-hooks-for-generic (type-list generic-function qualifier)
+  "get the hooks specific to the type specializer list and qualifier"
   (let ((qualified-list (gethash type-list (methods (gethash generic-function *hook-functions*)))))
-    (macrolet ((hooks () `(cdr (assoc qualifier qualified-list :test 'eql))))
-      (setf (hooks)
-            (delete-if-not (lambda (h) (eql qualifier (qualifier h))) (hooks)))
-      (hooks))))
+    (symbol-macrolet ((hooks (cdr (assoc qualifier qualified-list))))
+      (setf hooks
+            (delete-if-not (lambda (h) (eql qualifier (qualifier h))) hooks)))))
 
 (defun get-default-qualifier (gf-name)
   ;; this can be called before a hook gets interned due to `with-effective-qualifier`
