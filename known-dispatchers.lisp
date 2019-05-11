@@ -8,7 +8,7 @@
     (mapc (lambda (f) (apply f args))
             specific-hooks)))
 
-(set-dispatch-for-qualifier '+
+(set-dispatch-for-qualifier +
   (lambda (args specific-hooks)
     (reduce #'+ (mapcar (lambda (f) (apply f args))
                         specific-hooks))))

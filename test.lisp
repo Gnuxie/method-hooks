@@ -118,5 +118,4 @@
     (defhook addtest addtwice ((x integer))
       x)
 
-    (skip "this is going to take some implementing to do, bc atm we only disdpatch hooks with mapc"
-        (is = 4 (addtest 2)))))
+    (is = 4 (addtest 2))))
