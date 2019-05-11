@@ -22,10 +22,9 @@ a define-hook-function form."
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
   (with-effective-qualifier generic-function qualifier
     `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
-            (%load-dispatchers)
             ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
-                                 (funcall ,(dispatch-for-qualifier qualifier)
+                                 (funcall (function-value (dispatch-for-qualifier ',qualifier))
                                           (list ,@vanilla-lambda-list)
                                   (mapcar #'name
                                            (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))

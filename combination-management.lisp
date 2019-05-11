@@ -4,29 +4,43 @@
 (in-package :method-hooks)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *dispatch-for-qualifier* (make-hash-table)))
+  (defvar *dispatch-table* (make-hash-table)
+    "used to lookup the dispatcher for a symbol")
+  (defvar *dispatch-for-qualifier* (make-hash-table)
+    "used to lookup the symbol for a dispatcher"))
 
 (defun dispatch-for-qualifier (qualifier)
-  (gethash qualifier *dispatch-for-qualifier*))
+  (gethash (gethash qualifier *dispatch-for-qualifier*)
+           *dispatch-table*))
 
-(defmacro set-dispatch-for-qualifier (qualifier dispatch-function)
-  "a dispatcher must be a function which accepts two arguments:
+(defun set-dispatch-for-qualifier (qualifier dispatch)
+  "accepts two symbols."
+  (setf (gethash qualifier *dispatch-for-qualifier*)
+         dispatch))
+
+(defclass dispatcher ()
+  ((function-constructor :accessor function-constructor
+                         :initarg :function-constructor
+                         :type list
+                         :documentation "a lambda expression used to construct the function object for function-value.")
+
+   (function-value :accessor function-value
+                   :initarg :function-value
+                   :type function
+                   :documentation "a function object for the current environment")))
+
+(defmacro make-dispatcher (function-constructor)
+  `(make-instance 'dispatcher :function-constructor ',function-constructor
+                  :function-value ,function-constructor))
+
+(defmacro define-dispatch (name lambda-list &body body)
+  "the lambda list should accept two arguments:
 the list of arguments given by the current method call.
 the the specific hooks (as named or unamed functions) for the qualified method (that we will be dispatching from)."
-  `(setf (gethash ',qualifier *dispatch-for-qualifier*)
-         ',dispatch-function))
+  `(let ((new-dispatch (make-dispatcher (lambda ,lambda-list ,@body))))
+     (setf (gethash ',name *dispatch-table*)
+           new-dispatch)))
 
-(defmacro set-dispatch-for-qualifiers ((&rest qualifiers) dispatch-function)
-  `(progn
-     ,@ (loop :for qualifier :in qualifiers :collect
-             `(set-dispatch-for-qualifier ,qualifier ,dispatch-function))))
-
-(defmacro %load-dispatchers ()
-  (let ((continue? t))
-    (with-hash-table-iterator (generator-fn *dispatch-for-qualifier*)
-      `(progn ,@
-         (loop :while continue? :collect
-              (multiple-value-bind (more? key value) (generator-fn)
-                (setf continue? more?)
-
-                `(set-dispatch-for-qualifier ,key ,value)))))))
+(defmethod make-load-form ((self dispatcher) &optional environment)
+  (declare (ignore environment))
+  `(make-dispatcher ,(function-constructor self)))

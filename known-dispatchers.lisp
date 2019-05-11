@@ -3,12 +3,15 @@
 
 (in-package :method-hooks)
 
-(set-dispatch-for-qualifiers (:unqualified :before :around :after progn)
-  (lambda (args specific-hooks)
-    (mapc (lambda (f) (apply f args))
-            specific-hooks)))
+(define-dispatch dispatch-for-no-result (args specific-hooks)
+  (mapc (lambda (f) (apply f args))
+        specific-hooks))
 
-(set-dispatch-for-qualifier +
-  (lambda (args specific-hooks)
-    (reduce #'+ (mapcar (lambda (f) (apply f args))
-                        specific-hooks))))
+(define-dispatch dispatch-for-+ (args specific-hooks)
+  (reduce #'+ (mapcar (lambda (f) (apply f args))
+                      specific-hooks)))
+
+(dolist (qualifier '(:unqualified :before :around :after progn))
+  (set-dispatch-for-qualifier qualifier 'dispatch-for-no-result))
+
+(set-dispatch-for-qualifier '+ 'dispatch-for-+)
