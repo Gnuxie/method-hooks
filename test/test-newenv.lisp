@@ -1,10 +1,8 @@
-(ql:quickload '(:parachute :uiop :method-hooks))
+(ql:register-local-projects)
+(asdf:load-system :method-hooks-test)
 
-(loop :while (null (find-package "METHOD-HOOKS")) :do
+(loop :while (null (find-package "METHOD-HOOKS-TEST")) :do
      (sleep 1))
-
-(load "test-package")
-(load "test")
 
 ;;; we redefine this method bc we need to see if the METHOD-HOOKS::*hooks* table has been
 ;;; replenished on load. if it hasn't, the method dispatcher that is defined here will only dispatch
@@ -17,3 +15,4 @@
   (if (null (results-with-status :failed result))
       (uiop:quit)
       (uiop:quit -1)))
+
