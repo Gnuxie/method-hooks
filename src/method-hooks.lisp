@@ -9,13 +9,6 @@
        ,vanilla-lambda-list
      ,@body))
 
-(defmacro %load-hook-function (gf-name)
-  (let ((existing-hook-function (gethash gf-name *hook-functions*)))
-    (unless (null existing-hook-function)
-      `(when (null (gethash ',gf-name *hook-functions*))
-         (setf (gethash ',gf-name *hook-functions*)
-               ,(make-load-form existing-hook-function))))))
-
 (defmacro with-effective-qualifier (gf-name qualifier &body body)
   "take generic function and a symbol bound to a qualifier and mask that symbol with the effective qualifier.
 
@@ -28,14 +21,13 @@ a define-hook-function form."
 (defmacro %define-method-dispatch (generic-function qualifier descriptive-lambda-list vanilla-lambda-list type-list &body body)
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
   (with-effective-qualifier generic-function qualifier
-    `(progn (%load-hook-function ,generic-function)
-            (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
-            ,(delete :unqualified
+    `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
+       ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
                                  (funcall (function-value (dispatch-for-qualifier ',qualifier))
                                           (list ,@vanilla-lambda-list)
-                                  (mapcar #'name
-                                           (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
+                                          (mapcar #'name
+                                                  (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
 
                                  ,@body)
                                              :end (if (eql :unqualified qualifier) 3 0)))))

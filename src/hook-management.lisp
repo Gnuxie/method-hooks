@@ -20,13 +20,13 @@
    (default-qualifier :initarg :default-qualifier
                         :accessor default-qualifier
                         :type symbol)))
-
+#|
 (defmethod make-load-form ((self hook-function) &optional environment)
   (declare (ignore environment))
   `(make-instance 'hook-function ; we don't want to put the hash table in atm bc we have %load-specializers-to...
                   :combination ',(combination self)
                   :default-qualifier ',(default-qualifier self)))
-
+|#
 (defclass hook ()
   ((qualifier :initarg :qualifier
               :accessor qualifier
@@ -36,10 +36,10 @@
          :accessor name
          :type symbol)))
 
-
+#|
 (defmethod make-load-form ((self hook) &optional environment)
   `(make-instance 'hook :name ',(name self) :qualifier ',(qualifier self)))
-
+|#
 (defun intern-undeclared-hook-function (gf-name)
   "if we stumble across a generic which we don't know about (ie from using defhook without define-hook-function)
 then we must intern it in an appropriate way."
