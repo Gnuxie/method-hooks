@@ -13,6 +13,9 @@
 
 (defgeneric accumulating (a)
   (:method-combination progn))
+(define-hook-function addtest (x)
+  (:method-combination +))
+(define-hook-function progntest (a))
 
 (method-hooks:defhook accumulating add-once progn ((x integer))
   (incf *result* x))
@@ -92,8 +95,6 @@
     :depends-on (qualified-method-test)
 
     (let ((sum 0))
-      (define-hook-function progntest (a))
-
       (defhook progntest prognonce ((a integer))
         (incf sum))
 
@@ -108,9 +109,6 @@
 
       (progntest 0)
       (is = 2 sum))
-
-    (define-hook-function addtest (x)
-      (:method-combination +))
 
     (defhook addtest addonce ((x integer))
       x)

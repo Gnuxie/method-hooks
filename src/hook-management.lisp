@@ -21,6 +21,12 @@
                         :accessor default-qualifier
                         :type symbol)))
 
+(defmethod make-load-form ((self hook-function) &optional environment)
+  (declare (ignore environment))
+  `(make-instance 'hook-function ; we don't want to put the hash table in atm bc we have %load-specializers-to...
+                  :combination ',(combination self)
+                  :default-qualifier ',(default-qualifier self)))
+
 (defclass hook ()
   ((qualifier :initarg :qualifier
               :accessor qualifier
@@ -29,6 +35,10 @@
    (name :initarg :name
          :accessor name
          :type symbol)))
+
+
+(defmethod make-load-form ((self hook) &optional environment)
+  `(make-instance 'hook :name ',(name self) :qualifier ',(qualifier self)))
 
 (defun intern-undeclared-hook-function (gf-name)
   "if we stumble across a generic which we don't know about (ie from using defhook without define-hook-function)
@@ -85,8 +95,9 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
   "get the hooks specific to the type specializer list and qualifier"
   (let ((qualified-list (gethash type-list (methods (gethash generic-function *hook-functions*)))))
     (symbol-macrolet ((hooks (cdr (assoc qualifier qualified-list))))
-      (setf hooks
-            (delete-if-not (lambda (h) (eql qualifier (qualifier h))) hooks)))))
+      (unless (null hooks)
+        (setf hooks
+              (delete-if-not (lambda (h) (eql qualifier (qualifier h))) hooks))))))
 
 (defun get-default-qualifier (gf-name)
   ;; this can be called before a hook gets interned due to `with-effective-qualifier`

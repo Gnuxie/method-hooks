@@ -9,6 +9,13 @@
        ,vanilla-lambda-list
      ,@body))
 
+(defmacro %load-hook-function (gf-name)
+  (let ((existing-hook-function (gethash gf-name *hook-functions*)))
+    (unless (null existing-hook-function)
+      `(when (null (gethash ',gf-name *hook-functions*))
+         (setf (gethash ',gf-name *hook-functions*)
+               ,(make-load-form existing-hook-function))))))
+
 (defmacro with-effective-qualifier (gf-name qualifier &body body)
   "take generic function and a symbol bound to a qualifier and mask that symbol with the effective qualifier.
 
@@ -21,7 +28,8 @@ a define-hook-function form."
 (defmacro %define-method-dispatch (generic-function qualifier descriptive-lambda-list vanilla-lambda-list type-list &body body)
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
   (with-effective-qualifier generic-function qualifier
-    `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
+    `(progn (%load-hook-function ,generic-function)
+            (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
             ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
                                  (funcall (function-value (dispatch-for-qualifier ',qualifier))
@@ -76,6 +84,9 @@ the type specializer list for the given generic-function."
                          ,@body)
            (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list))))))
 
+;;; atm this can only be used in the top level and I think it's because it doesn't have an equivlent to
+;;; load specializers to table.
+;;; is it bad to require it to be used in the top level?
 (defmacro define-hook-function (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
 
@@ -89,7 +100,7 @@ I might add a way to override it from here too."
                 (t (cadr combination-option)))))
   
     (intern-hook-function name combination-type combination-type)
-    `(progn (intern-hook-function ',name ',combination-type ',combination-type)
+    `(progn (eval-when (:load-toplevel :execute) (intern-hook-function ',name ',combination-type ',combination-type))
             (defgeneric ,name ,gf-lambda-list
               ,(concatenate
                 'list

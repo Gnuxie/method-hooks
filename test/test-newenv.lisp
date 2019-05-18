@@ -11,6 +11,9 @@
 (method-hooks:defhook accumulating add-thrice progn ((x integer))
   (incf *result* x))
 
+(method-hooks:defhook addtest addonce ((x integer))
+  x)
+
 (let ((result (parachute:test 'method-hooks-test::comprehensive-test)))
   (if (null (results-with-status :failed result))
       (uiop:quit)
