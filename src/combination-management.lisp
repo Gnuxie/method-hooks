@@ -44,3 +44,10 @@ the the specific hooks (as named or unamed functions) for the qualified method (
 (defmethod make-load-form ((self dispatcher) &optional environment)
   (declare (ignore environment))
   `(make-dispatcher ,(function-constructor self)))
+
+(defmacro dispatch (generic-function qualifier type-specializer-list)
+  (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
+     `(funcall (function-value (dispatch-for-qualifier ',qualifier))
+               (list ,@vanilla-lambda-list)
+               (mapcar #'name
+                       (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))))

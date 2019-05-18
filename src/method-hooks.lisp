@@ -18,31 +18,21 @@ a define-hook-function form."
           (effective-qualifier ,gf-name ,qualifier)))
      ,@body))
 
-(defmacro %define-method-dispatch (generic-function qualifier descriptive-lambda-list vanilla-lambda-list type-list &body body)
-  "defines the dispatch method for hooks, will remember the qualifier for the gf"
+(defmacro %lay-method-base-for-dispatch (generic-function qualifier type-list descriptive-lambda-list &body body)
   (with-effective-qualifier generic-function qualifier
     `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
        ,(delete :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
-                                 (funcall (function-value (dispatch-for-qualifier ',qualifier))
-                                          (list ,@vanilla-lambda-list)
-                                          (mapcar #'name
-                                                  (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))
-
                                  ,@body)
-                                             :end (if (eql :unqualified qualifier) 3 0)))))
+                     :end (if (eql :unqualified qualifier) 3 0)))))
 
-(defmacro destructure-lambda-list (descriptive-lambda-list-sym vanilla-lambda-list-sym type-list-sym lambda-list &body body)
-  "if lambda-list=((a integer) b), type-list is (integer t) and vanilla-lambda-list is (a b)"
-  (let ((item (gensym)))
-    `(let* ((,descriptive-lambda-list-sym
-             (loop :for ,item :in ,lambda-list
-                :if (listp ,item)
-                :collect ,item
-                :else :collect (list ,item t)))
-            (,vanilla-lambda-list-sym (mapcar #'first ,descriptive-lambda-list-sym))
-            (,type-list-sym (mapcar #'second ,descriptive-lambda-list-sym)))
-       ,@body)))
+(defmacro %define-method-dispatch (generic-function qualifier type-specializer-list &body body)
+  "defines the dispatch method for hooks, will remember the qualifier for the gf"
+  (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
+    (with-effective-qualifier generic-function qualifier
+      `(%lay-method-base-for-dispatch ,generic-function ,qualifier ,type-list ,descriptive-lambda-list
+         (dispatch ,generic-function ,qualifier ,type-specializer-list)
+         ,@body))))
 
 (defmacro %load-specializers-to-table (generic-function type-list qualifier)
   "creates a form to load the hooks specific to the gf/type-specializer-list/qualifier
@@ -51,16 +41,6 @@ from the compilation environment into the internal table inside the runtime envi
     `(let ((,hooks ',(mapcar #'name (specific-hooks-for-generic type-list generic-function qualifier))))
        (mapc (lambda (f) (intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
-
-(defmacro %destructure-defhook-args (args &body body)
-  (let ((args-sym (gensym)))
-    `(let* ((,args-sym ,args)
-            (qualifier
-            (cond ((and (symbolp (car ,args-sym)) (not (null (car ,args-sym))))
-                   (prog1 (car ,args-sym) (setf ,args-sym (cdr ,args-sym))))
-                  (t :use-default))))
-       (destructuring-bind (lambda-list &body body) ,args-sym
-         ,@body))))
 
 (defmacro defhook (generic-function hook-name &rest args); {qualifier} lambda-list &body body
   "define a hook to be to be called by the effective method.
@@ -74,11 +54,8 @@ the type specializer list for the given generic-function."
         `(progn
            (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
                          ,@body)
-           (%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list))))))
+           (%define-method-dispatch ,generic-function ,qualifier ,lambda-list))))))
 
-;;; atm this can only be used in the top level and I think it's because it doesn't have an equivlent to
-;;; load specializers to table.
-;;; is it bad to require it to be used in the top level?
 (defmacro define-hook-function (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
 
@@ -92,7 +69,7 @@ I might add a way to override it from here too."
                 (t (cadr combination-option)))))
   
     (intern-hook-function name combination-type combination-type)
-    `(progn (eval-when (:load-toplevel :execute) (intern-hook-function ',name ',combination-type ',combination-type))
+    `(progn (intern-hook-function ',name ',combination-type ',combination-type)
             (defgeneric ,name ,gf-lambda-list
               ,(concatenate
                 'list
@@ -100,14 +77,15 @@ I might add a way to override it from here too."
                 `(:method-combination
                   ,combination-type))))))
 
-(defmacro finalize-dispatch-method (generic-function lambda-list (&optional (qualifier :use-default)) &body body)
+(defmacro finalize-dispatch-method (generic-function &rest args)
   "add a body to the method which dispatched the hooks for the given type specializer list
 useful if you wanted to use call-next-method
 defining another hook for the same gf and type specializer list after use will require recompilation
 of the form. "
-  (with-effective-qualifier generic-function qualifier
-    (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
-      `(%define-method-dispatch ,generic-function ,qualifier ,descriptive-lambda-list ,vanilla-lambda-list ,type-list
-         ,body))))
+  (%destructure-defhook-args args
+    (with-effective-qualifier generic-function qualifier
+      (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
+        `(%lay-method-base-for-dispatch ,generic-function ,qualifier ,type-list ,descriptive-lambda-list
+           ,@body)))))
 
 

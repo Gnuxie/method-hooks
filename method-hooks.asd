@@ -6,6 +6,7 @@
   :serial t
   :components  ((:module "src" :components
                          ((:file "package")
+                          (:file "macro-utils")
                           (:file "combination-management")
                           (:file "known-dispatchers")
                           (:file "hook-management")

@@ -14,8 +14,10 @@
 (method-hooks:defhook addtest addonce ((x integer))
   x)
 
+(method-hooks:finalize-dispatch-method add-test ((x integer))
+  (method-hooks::dispatch add-test + ((x integer))))
+
 (let ((result (parachute:test 'method-hooks-test::comprehensive-test)))
   (if (null (results-with-status :failed result))
       (uiop:quit)
       (uiop:quit -1)))
-
