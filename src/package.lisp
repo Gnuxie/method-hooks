@@ -20,7 +20,7 @@
    #:dispatch-function-constructor
    #:dispatch-function
 
-   #:name
+   #:hook-name
    #:qualifier
    #:hook
 

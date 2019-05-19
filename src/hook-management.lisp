@@ -32,13 +32,13 @@
               :accessor qualifier
               :type symbol)
 
-   (name :initarg :name
-         :accessor name
+   (hook-name :initarg :hook-name
+         :accessor hook-name
          :type symbol)))
 
 #|
 (defmethod make-load-form ((self hook) &optional environment)
-  `(make-instance 'hook :name ',(name self) :qualifier ',(qualifier self)))
+  `(make-instance 'hook :hook-name ',(hook-name self) :qualifier ',(qualifier self)))
 |#
 (defun intern-undeclared-hook-generic (gf-name)
   "if we stumble across a generic which we don't know about (ie from using defhook without define-hook-generic)
@@ -77,7 +77,7 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
               (not (eql qualifier (qualifier existing-hook))))
 
       (if (null existing-hook)
-          (setf existing-hook (make-instance 'hook :qualifier qualifier :name hook-name))
+          (setf existing-hook (make-instance 'hook :qualifier qualifier :hook-name hook-name))
           (setf (qualifier existing-hook)
                 qualifier))
       
@@ -86,7 +86,7 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
         ;; it's essential that the name is tested due to these forms being compiled and loaded in another env.
         (if (null hooks)
             (push (list qualifier existing-hook) (gethash type-list (methods generic-function)))
-            (pushnew existing-hook (cdr (assoc qualifier (gethash type-list (methods generic-function)) :test 'eql)) :test #'eql :key #'name))
+            (pushnew existing-hook (cdr (assoc qualifier (gethash type-list (methods generic-function)) :test 'eql)) :test #'eql :key #'hook-name))
 
         (setf (gethash hook-name *hooks*)
               existing-hook)))))

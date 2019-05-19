@@ -49,5 +49,5 @@ the the specific hooks (as named or unamed functions) for the qualified method (
   (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
      `(funcall (dispatch-function (dispatch-for-qualifier ',qualifier))
                (list ,@vanilla-lambda-list)
-               (mapcar #'name
+               (mapcar #'hook-name
                        (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))))

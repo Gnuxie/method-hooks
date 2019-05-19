@@ -38,7 +38,7 @@ a define-hook-generic form."
   "creates a form to load the hooks specific to the gf/type-specializer-list/qualifier
 from the compilation environment into the internal table inside the runtime environment."
   (let ((hooks (gensym)))
-    `(let ((,hooks ',(mapcar #'name (specific-hooks-for-generic type-list generic-function qualifier))))
+    `(let ((,hooks ',(mapcar #'hook-name (specific-hooks-for-generic type-list generic-function qualifier))))
        (mapc (lambda (f) (intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 
