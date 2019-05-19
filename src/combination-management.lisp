@@ -19,19 +19,19 @@
          dispatch))
 
 (defclass dispatcher ()
-  ((function-constructor :accessor function-constructor
-                         :initarg :function-constructor
+  ((dispatch-function-constructor :accessor dispatch-function-constructor
+                         :initarg :dispatch-function-constructor
                          :type list
-                         :documentation "a lambda expression used to construct the function object for function-value.")
+                         :documentation "a lambda expression used to construct the function object for dispatch-function.")
 
-   (function-value :accessor function-value
-                   :initarg :function-value
+   (dispatch-function :accessor dispatch-function
+                   :initarg :dispatch-function
                    :type function
                    :documentation "a function object for the current environment")))
 
 (defmacro make-dispatcher (function-constructor)
-  `(make-instance 'dispatcher :function-constructor ',function-constructor
-                  :function-value ,function-constructor))
+  `(make-instance 'dispatcher :dispatch-function-constructor ',function-constructor
+                  :dispatch-function ,function-constructor))
 
 (defmacro define-dispatch (name lambda-list &body body)
   "the lambda list should accept two arguments:
@@ -43,11 +43,11 @@ the the specific hooks (as named or unamed functions) for the qualified method (
 
 (defmethod make-load-form ((self dispatcher) &optional environment)
   (declare (ignore environment))
-  `(make-dispatcher ,(function-constructor self)))
+  `(make-dispatcher ,(dispatch-function-constructor self)))
 
 (defmacro dispatch (generic-function qualifier type-specializer-list)
   (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
-     `(funcall (function-value (dispatch-for-qualifier ',qualifier))
+     `(funcall (dispatch-function (dispatch-for-qualifier ',qualifier))
                (list ,@vanilla-lambda-list)
                (mapcar #'name
                        (specific-hooks-for-generic ',type-list ',generic-function ',qualifier)))))

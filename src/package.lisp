@@ -15,5 +15,14 @@
    #:dispatch-for-qualifier
    #:define-dispatch
    #:dispatch
+   #:make-dispatcher
+   #:dispatcher
+   #:dispatch-function-constructor
+   #:dispatch-function
+
+   #:name
+   #:qualifier
+   #:hook
+
 
 ))
