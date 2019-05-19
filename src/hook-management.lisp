@@ -3,11 +3,11 @@
 
 (in-package :method-hooks)
 
-(defvar *hook-functions* (make-hash-table)
-  "hash table holding information on all of the generics used either indirectly with defhook or directly with define-hook-function")
+(defvar *hook-generics* (make-hash-table)
+  "hash table holding information on all of the generics used either indirectly with defhook or directly with define-hook-generic")
 (defvar *hooks* (make-hash-table) "information about all the hooks used in the image")
 
-(defclass hook-function ()
+(defclass hook-generic ()
   ((methods :initarg :methods
             :accessor methods
             :initform (make-hash-table :test #'equal)
@@ -21,9 +21,9 @@
                         :accessor default-qualifier
                         :type symbol)))
 #|
-(defmethod make-load-form ((self hook-function) &optional environment)
+(defmethod make-load-form ((self hook-generic) &optional environment)
   (declare (ignore environment))
-  `(make-instance 'hook-function ; we don't want to put the hash table in atm bc we have %load-specializers-to...
+  `(make-instance 'hook-generic ; we don't want to put the hash table in atm bc we have %load-specializers-to...
                   :combination ',(combination self)
                   :default-qualifier ',(default-qualifier self)))
 |#
@@ -40,27 +40,27 @@
 (defmethod make-load-form ((self hook) &optional environment)
   `(make-instance 'hook :name ',(name self) :qualifier ',(qualifier self)))
 |#
-(defun intern-undeclared-hook-function (gf-name)
-  "if we stumble across a generic which we don't know about (ie from using defhook without define-hook-function)
+(defun intern-undeclared-hook-generic (gf-name)
+  "if we stumble across a generic which we don't know about (ie from using defhook without define-hook-generic)
 then we must intern it in an appropriate way."
-  (setf (gethash gf-name *hook-functions*)
-        (make-instance 'hook-function
+  (setf (gethash gf-name *hook-generics*)
+        (make-instance 'hook-generic
                        :combination :unqualified
                        :default-qualifier :unqualified)))
 
-(defun intern-hook-function (gf-name method-combination default-qualifier)
+(defun intern-hook-generic (gf-name method-combination default-qualifier)
   "will copy methods across if an existing gf is defined with them"
-  (let ((new-hook-fun (make-instance 'hook-function
+  (let ((new-hook-generic (make-instance 'hook-generic
                                      :combination method-combination
                                      :default-qualifier default-qualifier))
-        (existing-entry (gethash gf-name *hook-functions*)))
+        (existing-entry (gethash gf-name *hook-generics*)))
     
     (when existing-entry
-      (setf (methods new-hook-fun)
+      (setf (methods new-hook-generic)
             (methods existing-entry)))
 
-    (setf (gethash gf-name *hook-functions*)
-          new-hook-fun)))
+    (setf (gethash gf-name *hook-generics*)
+          new-hook-generic)))
 
 (defun intern-hook (gf-name hook-name type-list qualifier)
   "intern the hook into the hooks hashtable by symbol name and into the generic functions table
@@ -68,11 +68,11 @@ by type-list and qualifier
 
 as we are keeping references to hook objects in two places and due to the dificulty of keeping both
 exactly up to date, specific-hooks-for-generic  will remove old references from the hook functions method list before returning the result."
-  (when (null (gethash gf-name *hook-functions*))
-    (intern-undeclared-hook-function gf-name))
+  (when (null (gethash gf-name *hook-generics*))
+    (intern-undeclared-hook-generic gf-name))
 
   (let ((existing-hook (gethash hook-name *hooks*))
-        (generic-function (gethash gf-name *hook-functions*)))
+        (generic-function (gethash gf-name *hook-generics*)))
     (when (or (null existing-hook)
               (not (eql qualifier (qualifier existing-hook))))
 
@@ -93,7 +93,7 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
 
 (defun specific-hooks-for-generic (type-list generic-function qualifier)
   "get the hooks specific to the type specializer list and qualifier"
-  (let ((qualified-list (gethash type-list (methods (gethash generic-function *hook-functions*)))))
+  (let ((qualified-list (gethash type-list (methods (gethash generic-function *hook-generics*)))))
     (symbol-macrolet ((hooks (cdr (assoc qualifier qualified-list))))
       (unless (null hooks)
         (setf hooks
@@ -101,9 +101,9 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
 
 (defun get-default-qualifier (gf-name)
   ;; this can be called before a hook gets interned due to `with-effective-qualifier`
-  (macrolet ((gf-info ()`(gethash gf-name *hook-functions*)))
+  (macrolet ((gf-info ()`(gethash gf-name *hook-generics*)))
     (when (null (gf-info))
-      (intern-undeclared-hook-function gf-name))
+      (intern-undeclared-hook-generic gf-name))
     (default-qualifier (gf-info))))
 
 (defun effective-qualifier (gf-name qualifier)

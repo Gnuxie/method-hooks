@@ -4,7 +4,7 @@
    #:defhook
    #:clear-hook-table
    #:finalize-dispatch-method
-   #:define-hook-function
+   #:define-hook-generic
    #:specific-hooks-for-generic
 
    

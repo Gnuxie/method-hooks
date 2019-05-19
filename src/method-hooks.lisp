@@ -13,7 +13,7 @@
   "take generic function and a symbol bound to a qualifier and mask that symbol with the effective qualifier.
 
 The effective qualifier is the default qualifier for the given generic function should there be one defined by
-a define-hook-function form."
+a define-hook-generic form."
   `(let ((,qualifier
           (effective-qualifier ,gf-name ,qualifier)))
      ,@body))
@@ -56,7 +56,7 @@ the type specializer list for the given generic-function."
                          ,@body)
            (%define-method-dispatch ,generic-function ,qualifier ,lambda-list))))))
 
-(defmacro define-hook-function (name gf-lambda-list &rest options)
+(defmacro define-hook-generic (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
 
 by default the combination type becomes the default qualifier for new hooks
@@ -68,8 +68,8 @@ I might add a way to override it from here too."
                 ((null (cadr combination-option)) :unqualified)
                 (t (cadr combination-option)))))
   
-    (intern-hook-function name combination-type combination-type)
-    `(progn (intern-hook-function ',name ',combination-type ',combination-type)
+    (intern-hook-generic name combination-type combination-type)
+    `(progn (intern-hook-generic ',name ',combination-type ',combination-type)
             (defgeneric ,name ,gf-lambda-list
               ,(concatenate
                 'list
