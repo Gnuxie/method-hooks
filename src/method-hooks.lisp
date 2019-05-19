@@ -66,14 +66,19 @@ I might add a way to override it from here too."
          (combination-type
           (cond ((null combination-option) 'progn)
                 ((null (cadr combination-option)) :unqualified)
-                (t (cadr combination-option)))))
-  
-    (intern-hook-generic name combination-type combination-type)
-    `(progn (intern-hook-generic ',name ',combination-type ',combination-type)
+                (t (cadr combination-option))))
+         (default-qualifier
+          (let ((d (cadr (find :default-qualifier options :key #'car :test #'eql))))
+            (if (null d) combination-type d))))
+
+    (intern-hook-generic name combination-type default-qualifier)
+    `(progn (intern-hook-generic ',name ',combination-type ',default-qualifier)
             (defgeneric ,name ,gf-lambda-list
               ,(concatenate
                 'list
-                (delete :method-combination options :key #'car :test #'eql)
+                (delete-if (lambda (s) (or (eql s :method-combination)
+                                           (eql s :default-qualifier)))
+                           options :key #'car)
                 `(:method-combination
                   ,combination-type))))))
 

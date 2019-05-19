@@ -10,11 +10,12 @@
     "used to lookup the symbol for a dispatcher"))
 
 (defun dispatch-for-qualifier (qualifier)
+  "the dispatcher used for the given qualifier"
   (gethash (gethash qualifier *dispatch-for-qualifier*)
            *dispatch-table*))
 
 (defun set-dispatch-for-qualifier (qualifier dispatch)
-  "accepts two symbols."
+  "accepts two symbols, sets the dispatcher to be used for the given qualifier"
   (setf (gethash qualifier *dispatch-for-qualifier*)
          dispatch))
 
@@ -46,6 +47,7 @@ the the specific hooks (as named or unamed functions) for the qualified method (
   `(make-dispatcher ,(dispatch-function-constructor self)))
 
 (defmacro dispatch (generic-function qualifier type-specializer-list)
+  "create a dispatcher for the given qualifier using the gf and type-specializer-list"
   (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
      `(funcall (dispatch-function (dispatch-for-qualifier ',qualifier))
                (list ,@vanilla-lambda-list)
