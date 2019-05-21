@@ -4,6 +4,7 @@ method-hooks provides simple hooks dispatched by methods and supports method com
 
 **documentation can be viewed [here](https://gnuxie.gitlab.io/method-hooks/)**
 ## Motivation
+
 A friend thought that methods qualified with `progn` with the same type specializer lists would accumulate to run like hooks,
 
 Which could be quite useful so here we are.
@@ -22,6 +23,7 @@ Which could be quite useful so here we are.
 ### Getting started
 
 You can jump straight into defining hooks, they will by default (where define-hook-generic hasn't been used for the generic you're using) be unqualified just like normal methods.
+
 ```
 (ql:quickload :method-hooks)
 
@@ -41,6 +43,7 @@ You can jump straight into defining hooks, they will by default (where define-ho
 #### Using define-hook-generic with defhook
 
 If you want to `defhook` to remember what qualifier to use for a generic, you can use `define-hook-generic` which takes all the same options as `defgeneric` and optionally takes `:default-qualifier` which by default will be the method-combination type supplied. If no method combination type has been supplied then by default `define-hook-generic` will use `progn` as the default qualifier & combination.
+
 ```
 (define-hook-generic baz ()) ; defaults to progn for least astonishment
 (defhook baz meow () (print "meow"))
@@ -54,6 +57,7 @@ If you want to `defhook` to remember what qualifier to use for a generic, you ca
 ```
 
 Here is an example where we will use the `+` combination-type to show that `defhook` by default will use the combination-type supplied as the default qualifier.
+
 ```
 (define-hook-generic adding (x) ; remembers the method combination type and uses that as default.
   (:method-combination +))      ; can be overridden with (:default-qualifier :unqualified) (or another combination type)
@@ -83,9 +87,11 @@ If you wanted to edit the dispatch method you can and you can do anything you wa
 ```
 
 #### dispatching without a dispatcher
+
 To dispatch by hand you would as of writing have to understand internals. The definition for `dispatch` shows you how to do this, I think I will make this easier if there is demand in future.
 
 ### what are specialized-lambda-list, vanilla-lambda-list, type-list, descriptive-lambda-list?
+
 using method-hooks::destructure-specialized-lambda list will give you a good idea e.g. 
 
 ```
