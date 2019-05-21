@@ -3,6 +3,7 @@
   :author "Gnuxie <Gnuxie@protonmail.com>, theemacsshibe"
   :maintainer "Gnuxie <Gnuxie@protonmail.com>"
   :licence "Mozilla Public License Version 2.0"
+  :homepage "https://gnuxie.gitlab.io/method-hooks/"
   :serial t
   :components  ((:module "src" :components
                          ((:file "package")

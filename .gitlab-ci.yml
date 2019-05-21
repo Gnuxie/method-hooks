@@ -1,6 +1,20 @@
 stages:
     - test
     - build
+    - deploy
+
+pages:
+    stage: deploy
+    script:
+        - mkdir .public
+        - sbcl --load staple-generate.lisp --disable-debugger --quit
+        - cp -r ./doc/* .public
+        - mv .public public
+    artifacts:
+        paths:
+            - public
+    only:
+        - master
 
 image : daewok/lisp-devel
 
