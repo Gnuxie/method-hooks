@@ -80,6 +80,7 @@ There are some dispatchers already defined in [/src/known-dispatchers.lisp](http
 
 `defhook` expands with a definition for the dispatch method, this is so that each dispatch-method doesn't have to be finalized.
 If you wanted to edit the dispatch method you can and you can do anything you want in there, you must however dispatch the hooks yourself with `dispatch` or by hand.
+
 ```
 (finalize-dispatch-method adding ((x integer))
   (format t "dispatching hooks")
@@ -95,10 +96,11 @@ To dispatch by hand you would as of writing have to understand internals. The de
 using method-hooks::destructure-specialized-lambda list will give you a good idea e.g. 
 
 ```
-> (destructure-specialized-lambda-list descriptive-lambda-list type-list vanilla-lambda-list '((integer x) x) (values descriptive-lambda-list type-list vanilla-lambda-list))
-((INTEGER X) (X T))
-(INTEGER X)
-(X T)
+> (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list '((x integer) y)
+    (values descriptive-lambda-list type-list vanilla-lambda-list))
+((X INTEGER) (Y T))
+(INTEGER T)
+(X Y)
 ```
 
 It's also important to note that hooks are interned by the gf-name and **type-list** not the specialized-lambda-list as the variable symbols in the specialized-lambda-list can change.
