@@ -12,13 +12,17 @@ Which could be quite useful so here we are.
 
  * create hooks with `defhook`
  * set the default qualifier to use for hooks in a generic with `define-hook-generic`.
- * change how hooks dispatch with `finalize-dispatch-method` or add behavoir to the dispatch method, which will enable the use of `call-next-method`.
-* create a dispatcher for a new method-combination type with `define-dispatch`, or to change the behavoir of hook dispatch for an existsing qualifier.
+ * change how hooks dispatch with `finalize-dispatch-method` or add behaviour to the dispatch method, which will enable the use of `call-next-method`.
+* create a dispatcher for a new method-combination type with `define-dispatch`, or to change the behaviour of hook dispatch for an existing qualifier.
 * `set-dispatch-for-qualifier` to set the default dispatcher to use for a given qualifier
 * `dispatch` to dispatch hooks for a specific method, (useful within `finalize-dispatch-method`).
 
 ## Usage
+just a note, throughout the docs there is a mention of `type-specializer-list` and what we mean by that is the `specialized-lambda-list` (that's what clhs calls it and if I will remove this asap actually).
 
+### Getting started
+
+You can jump straight into defining hooks, they will by default (where define-hook-generic hasn't been used for the generic you're using) be unqualified just like normal methods.
 ```
 (ql:quickload :method-hooks)
 
@@ -30,13 +34,14 @@ Which could be quite useful so here we are.
 (method-hooks:defhook foo hey :before ((a string))
   (print "hey"))
   
-(foo "me")
-
-===>
+> (foo "me")
 "hey" 
 "me" 
 ```
 
+#### Using define-hook-generic with defhook
+
+If you want to `defhook` to remember what qualifier to use for a generic, you can use `define-hook-generic` which takes all the same options as `defgeneric` and optionally takes `:default-qualifier` which by default will be the method-combination type supplied. If no method combination type has been supplied then by default `define-hook-generic` will use `progn` as the default qualifier & combination.
 ```
 (define-hook-generic baz ()) ; defaults to progn for least astonishment
 (defhook baz meow () (print "meow"))
@@ -49,9 +54,10 @@ Which could be quite useful so here we are.
 (WOOF MEOW)
 ```
 
+Here is an example where we will use the `+` combination-type to show that `defhook` by default will use the combination-type supplied as the default qualifier.
 ```
 (define-hook-generic adding (x) ; remembers the method combination type and uses that as default.
-  (:method-combination +))      ; can be overriden with (:default-qualifier :unqualified) (or another combination type)
+  (:method-combination +))      ; can be overridden with (:default-qualifier :unqualified) (or another combination type)
   
 (defhook adding once ((x integer)) x)
 (defhook adding twice ((x integer)) x)
@@ -60,3 +66,22 @@ Which could be quite useful so here we are.
 
 6
 ```
+
+The keyword `:unqualified` can be supplied as a qualifier to `defhook`, `define-hook-generic`, `set-dispatch-for-qualifier` and anything else exported by this system as this is how unqualified methods are distinguished internally, however this will likely never be unnecessary.
+
+### defining a new dispatcher
+
+There are some dispatchers already defined in [/src/known-dispatchers.lisp](https://gitlab.com/Gnuxie/method-hooks/blob/master/src/known-dispatchers.lisp) and these are good examples to go by.
+
+### Using finalize-dispatch-method
+
+`defhook` expands with a definition for the dispatch method, this is so that each dispatch-method doesn't have to be finalized.
+If you wanted to edit the dispatch method you can and you can do anything you want in there, you must however dispatch the hooks yourself with `dispatch` or by hand.
+```
+(finalize-dispatch-method adding ((x integer))
+  (format t "dispatching hooks")
+  (dispatch adding + ((x integer))))
+```
+
+#### dispatching without a dispatcher
+To dispatch by hand you would as of writing have to understand internals. The definition for `dispatch` shows you how to do this, I think I will make this easier if there is demand in future.

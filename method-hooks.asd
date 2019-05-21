@@ -4,6 +4,7 @@
   :maintainer "Gnuxie <Gnuxie@protonmail.com>"
   :licence "Mozilla Public License Version 2.0"
   :homepage "https://gnuxie.gitlab.io/method-hooks/"
+  :bug-tracker "https://gitlab.com/Gnuxie/method-hooks/issues"
   :serial t
   :components  ((:module "src" :components
                          ((:file "package")
