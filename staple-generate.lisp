@@ -1,6 +1,6 @@
 (ql:quickload :staple-markdown)
 
-(loop :while (null (find-package "STAPLE-MARKDOWN")) :do
+(loop :while (null (find-package "STAPLE")) :do
      (sleep 1))
 
 (staple:generate :method-hooks :packages '(:method-hooks)

@@ -2,6 +2,7 @@
 
 method-hooks provides simple hooks dispatched by methods and supports method combination and qualifiers.
 
+**documentation can be viewed [here](https://gnuxie.gitlab.io/method-hooks/)**
 ## Motivation
 A friend thought that methods qualified with `progn` with the same type specializer lists would accumulate to run like hooks,
 
@@ -9,12 +10,12 @@ Which could be quite useful so here we are.
 
 ## Features
 
-* `define-hook-generic` to set the default qualifier to use on hook-dispatchers
-* `defhook` to create hooks
-* `finalize-dispatch-method` to determine what happens in the method that will dispatch the hooks.
-* `dispatch` to dispatch the hooks within finalize-dispatch-methods
-* `define-dispatch` to create a dispatcher for a new method-combination type
+ * create hooks with `defhook`
+ * set the default qualifier to use for hooks in a generic with `define-hook-generic`.
+ * change how hooks dispatch with `finalize-dispatch-method` or add behavoir to the dispatch method, which will enable the use of `call-next-method`.
+* create a dispatcher for a new method-combination type with `define-dispatch`, or to change the behavoir of hook dispatch for an existsing qualifier.
 * `set-dispatch-for-qualifier` to set the default dispatcher to use for a given qualifier
+* `dispatch` to dispatch hooks for a specific method, (useful within `finalize-dispatch-method`).
 
 ## Usage
 
@@ -45,7 +46,7 @@ Which could be quite useful so here we are.
 
 "woof" 
 "meow" 
-(WOOF BAR)
+(WOOF MEOW)
 ```
 
 ```
@@ -59,6 +60,3 @@ Which could be quite useful so here we are.
 
 6
 ```
-
-
-The macro `finalize-dispatch-method` can be used to add a body to a dispatch method, which would mean you could make use of `call-next-method`.

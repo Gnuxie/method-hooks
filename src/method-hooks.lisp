@@ -42,11 +42,15 @@ from the compilation environment into the internal table inside the runtime envi
        (mapc (lambda (f) (intern-hook ',generic-function f ',type-list ',qualifier))
              ,hooks))))
 
-(defmacro defhook (generic-function hook-name &rest args); {qualifier} lambda-list &body body
+(defmacro defhook (generic-function hook-name &rest args)
   "define a hook to be to be called by the effective method.
 
+This macro has roughly the same signature as defmethod `(DEFHOOK GENERIC-FUNCTION HOOK-NAME {QUALIFIER} LAMBDA-LIST &BODY BODY)`
 creates a function `hook-name` with the `body` then creates a method to dispatch all hooks matching
-the type specializer list for the given generic-function."
+the type specializer list for the given generic-function.
+
+See define-hook-generic
+See finalize-dispatch-method"
   (%destructure-defhook-args args
     (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
       (with-effective-qualifier generic-function qualifier
@@ -59,9 +63,10 @@ the type specializer list for the given generic-function."
 (defmacro define-hook-generic (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
 
-by default the combination type becomes the default qualifier for new hooks
-this can be overriden by not using this and using defgeneric. 
-I might add a way to override it from here too."
+by default the combination type becomes the default qualifier for any newly defined hooks
+this can be overriden by not using this and using defgeneric or supplying the option :default-qualifier.
+
+See defhook"
   (let* ((combination-option (find :method-combination options :key #'car :test #'eql))
          (combination-type
           (cond ((null combination-option) 'progn)
@@ -85,8 +90,10 @@ I might add a way to override it from here too."
 (defmacro finalize-dispatch-method (generic-function &rest args)
   "add a body to the method which dispatched the hooks for the given type specializer list
 useful if you wanted to use call-next-method
-defining another hook for the same gf and type specializer list after use will require recompilation
-of the form. "
+defining another hook for the same qualified specific method after use will require recompilation
+of the form as defhook will redefine the method.
+
+See defhook"
   (%destructure-defhook-args args
     (with-effective-qualifier generic-function qualifier
       (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
