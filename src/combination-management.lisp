@@ -58,13 +58,13 @@ See dispatch"
   (declare (ignore environment))
   `(make-dispatcher ,(dispatch-function-constructor self)))
 
-(defmacro dispatch (generic-function qualifier type-specializer-list)
+(defmacro dispatch (generic-function qualifier specialized-lambda-list)
   "dispatch the hooks using the default dispatcher for the given qualified specific method.
 
 See define-dispatch
 See dispatch-function
 See set-dispatch-for-qualifier"
-  (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
+  (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list
      `(funcall (dispatch-function (dispatch-for-qualifier ',qualifier))
                (list ,@vanilla-lambda-list)
                (mapcar #'hook-name

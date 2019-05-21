@@ -26,16 +26,16 @@ a define-hook-generic form."
                                  ,@body)
                      :end (if (eql :unqualified qualifier) 3 0)))))
 
-(defmacro %define-method-dispatch (generic-function qualifier type-specializer-list &body body)
+(defmacro %define-method-dispatch (generic-function qualifier specialized-lambda-list &body body)
   "defines the dispatch method for hooks, will remember the qualifier for the gf"
-  (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list type-specializer-list
+  (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list
     (with-effective-qualifier generic-function qualifier
       `(%lay-method-base-for-dispatch ,generic-function ,qualifier ,type-list ,descriptive-lambda-list
-         (dispatch ,generic-function ,qualifier ,type-specializer-list)
+         (dispatch ,generic-function ,qualifier ,specialized-lambda-list)
          ,@body))))
 
 (defmacro %load-specializers-to-table (generic-function type-list qualifier)
-  "creates a form to load the hooks specific to the gf/type-specializer-list/qualifier
+  "creates a form to load the hooks specific to the gf/type-list/qualifier
 from the compilation environment into the internal table inside the runtime environment."
   (let ((hooks (gensym)))
     `(let ((,hooks ',(mapcar #'hook-name (specific-hooks-for-generic type-list generic-function qualifier))))
@@ -45,20 +45,20 @@ from the compilation environment into the internal table inside the runtime envi
 (defmacro defhook (generic-function hook-name &rest args)
   "define a hook to be to be called by the effective method.
 
-This macro has roughly the same signature as defmethod `(DEFHOOK GENERIC-FUNCTION HOOK-NAME {QUALIFIER} LAMBDA-LIST &BODY BODY)`
+This macro has roughly the same signature as defmethod `(DEFHOOK GENERIC-FUNCTION HOOK-NAME {QUALIFIER} SPECIALIZED-LAMBDA-LIST &BODY BODY)`
 creates a function `hook-name` with the `body` then creates a method to dispatch all hooks matching
-the type specializer list for the given generic-function.
+the type-list for the given generic-function.
 
 See define-hook-generic
 See finalize-dispatch-method"
   (%destructure-defhook-args args
-    (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list
+    (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list
       (with-effective-qualifier generic-function qualifier
         (intern-hook generic-function hook-name type-list qualifier)
         `(progn
            (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
                          ,@body)
-           (%define-method-dispatch ,generic-function ,qualifier ,lambda-list))))))
+           (%define-method-dispatch ,generic-function ,qualifier ,specialized-lambda-list))))))
 
 (defmacro define-hook-generic (name gf-lambda-list &rest options)
   "utility to help with gf's with method combination by remembering the combination type
@@ -88,7 +88,7 @@ See defhook"
                   ,combination-type))))))
 
 (defmacro finalize-dispatch-method (generic-function &rest args)
-  "add a body to the method which dispatched the hooks for the given type specializer list
+  "add a body to the method which dispatched the hooks for the given specialized-lambda-list
 useful if you wanted to use call-next-method
 defining another hook for the same qualified specific method after use will require recompilation
 of the form as defhook will redefine the method.
@@ -96,7 +96,7 @@ of the form as defhook will redefine the method.
 See defhook"
   (%destructure-defhook-args args
     (with-effective-qualifier generic-function qualifier
-      (destructure-lambda-list descriptive-lambda-list vanilla-lambda-list type-list lambda-list 
+      (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list 
         `(%lay-method-base-for-dispatch ,generic-function ,qualifier ,type-list ,descriptive-lambda-list
            ,@body)))))
 

@@ -18,7 +18,6 @@ Which could be quite useful so here we are.
 * `dispatch` to dispatch hooks for a specific method, (useful within `finalize-dispatch-method`).
 
 ## Usage
-just a note, throughout the docs there is a mention of `type-specializer-list` and what we mean by that is the `specialized-lambda-list` (that's what clhs calls it and if I will remove this asap actually).
 
 ### Getting started
 
@@ -85,3 +84,15 @@ If you wanted to edit the dispatch method you can and you can do anything you wa
 
 #### dispatching without a dispatcher
 To dispatch by hand you would as of writing have to understand internals. The definition for `dispatch` shows you how to do this, I think I will make this easier if there is demand in future.
+
+### what are specialized-lambda-list, vanilla-lambda-list, type-list, descriptive-lambda-list?
+using method-hooks::destructure-specialized-lambda list will give you a good idea e.g. 
+
+```
+> (destructure-specialized-lambda-list descriptive-lambda-list type-list vanilla-lambda-list '((integer x) x) (values descriptive-lambda-list type-list vanilla-lambda-list))
+((INTEGER X) (X T))
+(INTEGER X)
+(X T)
+```
+
+It's also important to note that hooks are interned by the gf-name and **type-list** not the specialized-lambda-list as the variable symbols in the specialized-lambda-list can change.

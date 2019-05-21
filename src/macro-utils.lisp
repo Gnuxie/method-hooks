@@ -10,15 +10,17 @@
             (cond ((and (symbolp (car ,args-sym)) (not (null (car ,args-sym))))
                    (prog1 (car ,args-sym) (setf ,args-sym (cdr ,args-sym))))
                   (t :use-default))))
-       (destructuring-bind (lambda-list &body body) ,args-sym
+       (destructuring-bind (specialized-lambda-list &body body) ,args-sym
          ,@body))))
 
 
-(defmacro destructure-lambda-list (descriptive-lambda-list-sym vanilla-lambda-list-sym type-list-sym lambda-list &body body)
-  "if lambda-list=((a integer) b), type-list is (integer t) and vanilla-lambda-list is (a b)"
+(defmacro destructure-specialized-lambda-list (descriptive-lambda-list-sym vanilla-lambda-list-sym type-list-sym specialized-lambda-list &body body)
+  "if specialized-lambda-list is ((a integer) b):
+descriptive-lambda-list will be ((x integer) (x t))
+type-list will be (integer t) and vanilla-lambda-list is (a b)"
   (let ((item (gensym)))
     `(let* ((,descriptive-lambda-list-sym
-             (loop :for ,item :in ,lambda-list
+             (loop :for ,item :in ,specialized-lambda-list
                 :if (listp ,item)
                 :collect ,item
                 :else :collect (list ,item t)))
