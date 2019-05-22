@@ -13,4 +13,4 @@
                           (:file "known-dispatchers")
                           (:file "hook-management")
                           (:file "method-hooks"))))
-  :description "simple method hooks defined like methods and dispatched via method")
+  :description "simple qualifiable hooks defined like methods with the option to modify the dispatch method and how dispatch happens")

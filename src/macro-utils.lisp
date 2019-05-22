@@ -26,4 +26,5 @@ type-list will be (integer t) and vanilla-lambda-list is (a b)"
                 :else :collect (list ,item t)))
             (,vanilla-lambda-list-sym (mapcar #'first ,descriptive-lambda-list-sym))
             (,type-list-sym (mapcar #'second ,descriptive-lambda-list-sym)))
+       (declare (ignorable ,descriptive-lambda-list-sym ,vanilla-lambda-list-sym ,type-list-sym))
        ,@body)))

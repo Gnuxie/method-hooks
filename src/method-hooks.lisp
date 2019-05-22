@@ -3,7 +3,7 @@
 
 (in-package :method-hooks)
 
-(defmacro %defhook-fun (hook-name vanilla-lambda-list qualifier &body body)
+(defmacro %defhook-fun (hook-name vanilla-lambda-list &body body)
   "this is literally just a copy of defun atm."
   `(defun ,hook-name 
        ,vanilla-lambda-list
@@ -56,7 +56,7 @@ See finalize-dispatch-method"
       (with-effective-qualifier generic-function qualifier
         (intern-hook generic-function hook-name type-list qualifier)
         `(progn
-           (%defhook-fun ,hook-name ,vanilla-lambda-list ,qualifier
+           (%defhook-fun ,hook-name ,vanilla-lambda-list
                          ,@body)
            (%define-method-dispatch ,generic-function ,qualifier ,specialized-lambda-list))))))
 

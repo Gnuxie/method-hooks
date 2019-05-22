@@ -44,8 +44,6 @@
 
   (define-test spooky-package-test
 
-    ;; clearing the tables actually doesn't do anything when the methods have been compiled
-    ;; as any existing functions will not be effected by the tables being cleared.
     ;; when any hook is recompiled the tables will be repopulated anyways.
     ;; or this is how it should stay
     (method-hooks-package-test:reset-tables)
