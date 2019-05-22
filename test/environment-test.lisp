@@ -7,7 +7,12 @@
   ;; see https://common-lisp.net/project/asdf/uiop.html#UIOP_002fRUN_002dPROGRAM uiop:run-program returns 3 values.
 
   (flet ((safe-filename-command (file-name)
-           (format nil "sbcl --load ~a --disable-debugger --quit"
+           (format nil
+                   #+sbcl "sbcl --load ~a --disable-debugger --quit"
+                   #+ccl "ccl --load ~a " ; idk how to disable the debugger and quit
+                   #- (or sbcl ccl) (progn (warn "SKIPPED ENVIRONMENT TEST")
+                                           ("echo ~a"))
+                   
                    (asdf:system-relative-pathname :method-hooks file-name))))
     (is = 0 (nth-value 2 (uiop:run-program (safe-filename-command "test/compile-again.lisp"))))
     (let ((exit-code (nth-value 2 (uiop:run-program (safe-filename-command "test/test-newenv.lisp")))))

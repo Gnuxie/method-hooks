@@ -5,5 +5,6 @@
 
 (defun ci-run ()
   (let ((test-result (run)))
-    (when (not (null (results-with-status :failed test-result)))
-      (uiop:quit -1))))
+    (if (not (null (results-with-status :failed test-result)))
+        (uiop:quit -1)
+        (uiop:quit 0))))
