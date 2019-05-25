@@ -90,8 +90,8 @@ See defhook"
 (defmacro finalize-dispatch-method (generic-function &rest args)
   "add a body to the method which dispatched the hooks for the given specialized-lambda-list
 useful if you wanted to use call-next-method
-defining another hook for the same qualified specific method after use will require recompilation
-of the form as defhook will redefine the method.
+
+For the definition to be effective, it must be defined after every specific hook for the same method hence finalize.
 
 See defhook"
   (%destructure-defhook-args args
