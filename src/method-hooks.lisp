@@ -91,7 +91,7 @@ See defhook"
                                            (eql s :hook-point)))
                            options :key #'car)
                 `(:method-combination
-                  ,combination-type)))
+                  ,(if (eql :unqualified combination-type) 'standard combination-type))))
 
             ,(when hook-point
                (delete :unqualified `(defmethod ,name ,default-qualifier ,gf-lambda-list)

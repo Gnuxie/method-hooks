@@ -108,6 +108,6 @@ It's also important to note that hooks are interned by the gf-name and **type-li
 
 ### More (and more practical) examples
 
-Here is a [version](https://gitlab.com/Gnuxie/cl-matrix/blob/47758656a3df54d15ce41da92a5c90f42d02fdf9/src/base-events.lisp) of cl-matrix where event listening is done with method-hooks.
+Here is a [version](https://gitlab.com/Gnuxie/cl-matrix/blob/account-for-matrix-extensions/src/base-events.lisp) of cl-matrix where event listening is done with method-hooks.
 
 Here is a [version](https://gitlab.com/Gnuxie/cl-matrix/blob/master/src/base-events.lisp) where I badly abuse deeds for comparison.
