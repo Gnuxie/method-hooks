@@ -17,6 +17,7 @@ Which could be quite useful so here we are.
 * create a dispatcher for a new method-combination type with `define-dispatch`, or to change the behaviour of hook dispatch for an existing qualifier.
 * `set-dispatch-for-qualifier` to set the default dispatcher to use for a given qualifier
 * `dispatch` to dispatch hooks for a specific method, (useful within `finalize-dispatch-method`).
+* suppression of no-applicable-method error to get extensible hook points by passing (:hook-point t) to define-hook-generic.
 
 ## Usage
 

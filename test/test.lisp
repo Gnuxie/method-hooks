@@ -16,6 +16,11 @@
 (define-hook-generic addtest (x)
   (:method-combination +))
 (define-hook-generic progntest (a))
+(define-hook-generic hook-point-generic ()
+  (:method-combination +)
+  (:hook-point t))
+
+(define-hook-generic bad-hook-point ())
 
 (method-hooks:defhook accumulating add-once progn ((x integer))
   (incf *result* x))
@@ -114,4 +119,12 @@
     (defhook addtest addtwice ((x integer))
       x)
 
-    (is = 4 (addtest 2))))
+    (is = 4 (addtest 2)))
+
+  (define-test hook-point-test
+      :depends-on (qualified-method-test)
+
+      (true (progn (hook-point-generic) t)
+            "no applicable method error doesn't singal")
+
+      (fail (bad-hook-point))))

@@ -66,15 +66,20 @@ See finalize-dispatch-method"
 by default the combination type becomes the default qualifier for any newly defined hooks
 this can be overriden by not using this and using defgeneric or supplying the option :default-qualifier.
 
+supplying `:hook-point t` will create a method qualified with the default-qualifier so that the generic acts
+like an extensible hook point and will not signal no-applicable-method error when no hooks have been defined.
+ 
 See defhook"
   (let* ((combination-option (find :method-combination options :key #'car :test #'eql))
          (combination-type
           (cond ((null combination-option) 'progn)
                 ((null (cadr combination-option)) :unqualified)
+                ((eql 'standard (cadr combination-option)) :unqualified)
                 (t (cadr combination-option))))
          (default-qualifier
           (let ((d (cadr (find :default-qualifier options :key #'car :test #'eql))))
-            (if (null d) combination-type d))))
+            (if (null d) combination-type d)))
+         (hook-point (find :hook-point options :key #'car)))
 
     (intern-hook-generic name combination-type default-qualifier)
     `(progn (intern-hook-generic ',name ',combination-type ',default-qualifier)
@@ -82,10 +87,15 @@ See defhook"
               ,(concatenate
                 'list
                 (delete-if (lambda (s) (or (eql s :method-combination)
-                                           (eql s :default-qualifier)))
+                                           (eql s :default-qualifier)
+                                           (eql s :hook-point)))
                            options :key #'car)
                 `(:method-combination
-                  ,combination-type))))))
+                  ,combination-type)))
+
+            ,(when hook-point
+               (delete :unqualified `(defmethod ,name ,default-qualifier ,gf-lambda-list)
+                       :end 3)))))
 
 (defmacro finalize-dispatch-method (generic-function &rest args)
   "add a body to the method which dispatched the hooks for the given specialized-lambda-list
