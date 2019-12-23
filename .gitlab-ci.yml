@@ -8,7 +8,7 @@ pages:
     script:
         - mkdir .public
         - sbcl --load staple-generate.lisp --disable-debugger --quit
-        - cp -r ./doc/* .public
+        - cp -r ./docs/* .public
         - mv .public public
     artifacts:
         paths:
