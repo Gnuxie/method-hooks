@@ -17,6 +17,7 @@
   (:method-combination +))
 (define-hook-generic progntest (a))
 (define-hook-generic hook-point-generic ()
+  (:documentation "because no one tested this last time.")
   (:method-combination +)
   (:hook-point t))
 

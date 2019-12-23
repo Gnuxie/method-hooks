@@ -64,10 +64,12 @@ See finalize-dispatch-method"
   "utility to help with gf's with method combination by remembering the combination type
 
 by default the combination type becomes the default qualifier for any newly defined hooks
-this can be overriden by not using this and using defgeneric or supplying the option :default-qualifier.
+this can be overriden by not using this and using defgeneric or supplying
+the option :default-qualifier.
 
-supplying `:hook-point t` will create a method qualified with the default-qualifier so that the generic acts
-like an extensible hook point and will not signal no-applicable-method error when no hooks have been defined.
+supplying `:hook-point t` will create a method qualified with the default-qualifier
+so that the generic acts like an extensible hook point and will not signal
+no-applicable-method error when no hooks have been defined.
  
 See defhook"
   (let* ((combination-option (find :method-combination options :key #'car :test #'eql))
@@ -84,14 +86,12 @@ See defhook"
     (intern-hook-generic name combination-type default-qualifier)
     `(progn (intern-hook-generic ',name ',combination-type ',default-qualifier)
             (defgeneric ,name ,gf-lambda-list
-              ,(concatenate
-                'list
-                (delete-if (lambda (s) (or (eql s :method-combination)
-                                           (eql s :default-qualifier)
-                                           (eql s :hook-point)))
-                           options :key #'car)
-                `(:method-combination
-                  ,(if (eql :unqualified combination-type) 'standard combination-type))))
+              ,@ (delete-if (lambda (s) (or (eql s :method-combination)
+                                            (eql s :default-qualifier)
+                                            (eql s :hook-point)))
+                            options :key #'car)
+                 (:method-combination
+                   ,(if (eql :unqualified combination-type) 'standard combination-type)))
 
             ,(when hook-point
                (delete :unqualified `(defmethod ,name ,default-qualifier ,gf-lambda-list)
