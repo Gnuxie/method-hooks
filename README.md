@@ -1,3 +1,7 @@
+# WARNING!
+
+I do not consider this library to be a good solution to the problem it solves, the code quality is poor and it should be re-written, but it's good enough.
+
 # Method Hooks
 
 method-hooks provides simple hooks dispatched by methods and supports method combination and qualifiers.
@@ -32,13 +36,13 @@ You can jump straight into defining hooks, they will by default (where define-ho
 
 (method-hooks:defhook foo user ((a string))
   (print a))
-  
+
 (method-hooks:defhook foo hey :before ((a string))
   (print "hey"))
-  
+
 > (foo "me")
-"hey" 
-"me" 
+"hey"
+"me"
 ```
 
 #### Using define-hook-generic with defhook
@@ -52,8 +56,8 @@ If you want to `defhook` to remember what qualifier to use for a generic, you ca
 
 > (baz)
 
-"woof" 
-"meow" 
+"woof"
+"meow"
 (WOOF MEOW)
 ```
 
@@ -62,7 +66,7 @@ Here is an example where we will use the `+` combination-type to show that `defh
 ```
 (define-hook-generic adding (x) ; remembers the method combination type and uses that as default.
   (:method-combination +))      ; can be overridden with (:default-qualifier :unqualified) (or another combination type)
-  
+
 (defhook adding once ((x integer)) x)
 (defhook adding twice ((x integer)) x)
 
@@ -94,7 +98,7 @@ To dispatch by hand you would as of writing have to understand internals. The de
 
 ### what are specialized-lambda-list, vanilla-lambda-list, type-list, descriptive-lambda-list?
 
-using method-hooks::destructure-specialized-lambda list will give you a good idea e.g. 
+using method-hooks::destructure-specialized-lambda list will give you a good idea e.g.
 
 ```
 > (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list '((x integer) y)
