@@ -12,11 +12,11 @@
             :accessor methods
             :initform (make-hash-table :test #'equal)
             :type hash-table)
-   
+
    (combination :initarg :combination
                 :accessor combination
                 :type symbol)
-   
+
    (default-qualifier :initarg :default-qualifier
                         :accessor default-qualifier
                         :type symbol)))
@@ -54,7 +54,7 @@ then we must intern it in an appropriate way."
                                      :combination method-combination
                                      :default-qualifier default-qualifier))
         (existing-entry (gethash gf-name *hook-generics*)))
-    
+
     (when existing-entry
       (setf (methods new-hook-generic)
             (methods existing-entry)))
@@ -80,7 +80,7 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
           (setf existing-hook (make-instance 'hook :qualifier qualifier :hook-name hook-name))
           (setf (qualifier existing-hook)
                 qualifier))
-      
+
       (let ((hooks (assoc qualifier (gethash type-list (methods generic-function)) :test 'eql)))
 
         ;; it's essential that the name is tested due to these forms being compiled and loaded in another env.
@@ -97,7 +97,7 @@ exactly up to date, specific-hooks-for-generic  will remove old references from 
     (symbol-macrolet ((hooks (cdr (assoc qualifier qualified-list))))
       (unless (null hooks)
         (setf hooks
-              (delete-if-not (lambda (h) (eql qualifier (qualifier h))) hooks))))))
+              (remove-if-not (lambda (h) (eql qualifier (qualifier h))) hooks))))))
 
 (defun get-default-qualifier (gf-name)
   ;; this can be called before a hook gets interned due to `with-effective-qualifier`

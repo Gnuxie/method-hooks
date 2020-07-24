@@ -5,7 +5,7 @@
 
 (defmacro %defhook-fun (hook-name vanilla-lambda-list &body body)
   "this is literally just a copy of defun atm."
-  `(defun ,hook-name 
+  `(defun ,hook-name
        ,vanilla-lambda-list
      ,@body))
 
@@ -21,7 +21,7 @@ a define-hook-generic form."
 (defmacro %lay-method-base-for-dispatch (generic-function qualifier type-list descriptive-lambda-list &body body)
   (with-effective-qualifier generic-function qualifier
     `(progn (%load-specializers-to-table ,generic-function ,type-list ,qualifier)
-       ,(delete :unqualified
+       ,(remove :unqualified
                      `(defmethod ,generic-function ,qualifier ,descriptive-lambda-list
                                  ,@body)
                      :end (if (eql :unqualified qualifier) 3 0)))))
@@ -70,7 +70,7 @@ the option :default-qualifier.
 supplying `:hook-point t` will create a method qualified with the default-qualifier
 so that the generic acts like an extensible hook point and will not signal
 no-applicable-method error when no hooks have been defined.
- 
+
 See defhook"
   (let* ((combination-option (find :method-combination options :key #'car :test #'eql))
          (combination-type
@@ -86,7 +86,7 @@ See defhook"
     (intern-hook-generic name combination-type default-qualifier)
     `(progn (intern-hook-generic ',name ',combination-type ',default-qualifier)
             (defgeneric ,name ,gf-lambda-list
-              ,@ (delete-if (lambda (s) (or (eql s :method-combination)
+              ,@ (remove-if (lambda (s) (or (eql s :method-combination)
                                             (eql s :default-qualifier)
                                             (eql s :hook-point)))
                             options :key #'car)
@@ -94,7 +94,7 @@ See defhook"
                    ,(if (eql :unqualified combination-type) 'standard combination-type)))
 
             ,(when hook-point
-               (delete :unqualified `(defmethod ,name ,default-qualifier ,gf-lambda-list)
+               (remove :unqualified `(defmethod ,name ,default-qualifier ,gf-lambda-list)
                        :end 3)))))
 
 (defmacro finalize-dispatch-method (generic-function &rest args)
@@ -106,8 +106,6 @@ For the definition to be effective, it must be defined after every specific hook
 See defhook"
   (%destructure-defhook-args args
     (with-effective-qualifier generic-function qualifier
-      (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list 
+      (destructure-specialized-lambda-list descriptive-lambda-list vanilla-lambda-list type-list specialized-lambda-list
         `(%lay-method-base-for-dispatch ,generic-function ,qualifier ,type-list ,descriptive-lambda-list
            ,@body)))))
-
-

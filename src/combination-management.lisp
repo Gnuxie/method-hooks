@@ -3,11 +3,10 @@
 
 (in-package :method-hooks)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *dispatch-table* (make-hash-table)
-    "used to lookup the dispatcher for a symbol")
-  (defvar *dispatch-for-qualifier* (make-hash-table)
-    "used to lookup the symbol for a dispatcher"))
+(defvar *dispatch-table* (make-hash-table)
+  "used to lookup the dispatcher for a symbol")
+(defvar *dispatch-for-qualifier* (make-hash-table)
+  "used to lookup the symbol for a dispatcher")
 
 (defun dispatch-for-qualifier (qualifier)
   "the dispatcher used for the given qualifier
